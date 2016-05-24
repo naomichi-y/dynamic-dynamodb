@@ -5,6 +5,8 @@ import os.path
 import ConfigParser
 import ast
 from copy import deepcopy
+import re
+import commands
 
 try:
     from collections import OrderedDict as ordereddict
@@ -451,6 +453,8 @@ def __parse_options(config_file, section, options):
 
     return configuration
 
+def __regexp_replace_callback(match):
+    return commands.getoutput(match.group(1))
 
 def parse(config_path):
     """ Parse the configuration file
@@ -566,6 +570,10 @@ def parse(config_path):
 
         found_table = True
         current_table_name = current_section.rsplit(':', 1)[1].strip()
+
+        regexp_pattern = '`([^`]+)`'
+        current_table_name = re.sub(regexp_pattern, __regexp_replace_callback, current_table_name)
+
         table_config['tables'][current_table_name] = \
             dict(default_options.items() + __parse_options(
                 config_file, current_section, TABLE_CONFIG_OPTIONS).items())
